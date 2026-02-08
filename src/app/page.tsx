@@ -52,14 +52,6 @@ const TERM_DEFS: Record<string, string> = {
   "misinformation / engagement bait": "Designed to trigger shares/fear/anger instead of providing verified facts.",
 };
 
-const presets = {
-  text: `USPS: Your package is on hold due to an address issue. Confirm within 12 hours to avoid return. https://bit.ly/3xAMPLE`,
-  email: `Subject: Urgent Payroll Update Required
-
-Hi, this is HR. We noticed your direct deposit is failing. Reply with your full name and the 6-digit verification code we just sent to update your account immediately.`,
-  social: `BREAKING: They are hiding the truth. Share this NOW before it’s deleted. Click here to see the leaked proof: example.com/leak`,
-};
-
 const demoSpells: Array<{ label: string; kind: "text" | "email" | "social"; text: string }> = [
   {
     label: "CEO Gift Cards",
@@ -258,7 +250,15 @@ export default function Home() {
   const [mounted, setMounted] = useState(false);
 
   const [kind, setKind] = useState<"text" | "email" | "social">("text");
-  const [text, setText] = useState(presets.text);
+
+  // ✅ No presets. Empty by default. Remembers per tab.
+  const [drafts, setDrafts] = useState<{ text: string; email: string; social: string }>({
+    text: "",
+    email: "",
+    social: "",
+  });
+
+  const text = drafts[kind];
 
   const [emailMode, setEmailMode] = useState<"personal" | "work">("personal");
   const [senderEmail, setSenderEmail] = useState("");
@@ -271,6 +271,7 @@ export default function Home() {
   const [historyOpen, setHistoryOpen] = useState(false);
 
   const [overrideMismatch, setOverrideMismatch] = useState(false);
+  const [openTip, setOpenTip] = useState<string | null>(null);
 
   const score = data?.risk_score ?? 0;
 
@@ -289,17 +290,18 @@ export default function Home() {
     } catch {}
   }, [history]);
 
-  function loadPreset(k: "text" | "email" | "social") {
-    setKind(k);
-    setText(presets[k]);
-    setData(null);
-    setError(null);
-    setOverrideMismatch(false);
-    if (k !== "email") {
-      setEmailMode("personal");
-      setSenderEmail("");
-    }
-  }
+  useEffect(() => {
+    const onDown = () => setOpenTip(null);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpenTip(null);
+    };
+    window.addEventListener("pointerdown", onDown);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, []);
 
   const detected = useMemo(() => detectKind(text), [text]);
 
@@ -334,10 +336,18 @@ export default function Home() {
     return null;
   }, [kind, detected, text]);
 
-  async function analyze(payload?: { kind: "text" | "email" | "social"; text: string; emailMode?: "personal" | "work"; senderEmail?: string }) {
+  const mismatchActive = !!mismatch && !overrideMismatch;
+
+  async function analyze(payload?: {
+    kind: "text" | "email" | "social";
+    text: string;
+    emailMode?: "personal" | "work";
+    senderEmail?: string;
+  }) {
     setLoading(true);
     setError(null);
     setData(null);
+    setOpenTip(null);
 
     const p =
       payload ??
@@ -359,7 +369,7 @@ export default function Home() {
       if (!res.ok) throw new Error(json?.error ?? "Request failed");
 
       setKind(p.kind);
-      setText(p.text);
+      setDrafts((d) => ({ ...d, [p.kind]: p.text }));
       setData(json);
 
       const item: HistoryItem = {
@@ -392,6 +402,7 @@ export default function Home() {
     setData(null);
     setError(null);
     setOverrideMismatch(false);
+    setOpenTip(null);
     if (s !== "email") {
       setEmailMode("personal");
       setSenderEmail("");
@@ -400,6 +411,19 @@ export default function Home() {
 
   function copyText(s: string) {
     navigator.clipboard.writeText(s);
+  }
+
+  // ✅ These buttons now only SWITCH type; they do NOT paste anything.
+  function switchKindOnly(k: "text" | "email" | "social") {
+    setKind(k);
+    setData(null);
+    setError(null);
+    setOverrideMismatch(false);
+    setOpenTip(null);
+    if (k !== "email") {
+      setEmailMode("personal");
+      setSenderEmail("");
+    }
   }
 
   return (
@@ -473,10 +497,18 @@ export default function Home() {
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <span>Summon the Message</span>
+
+                  {/* ✅ These are now JUST switches (no sample injection). */}
                   <div className="flex gap-2">
-                    <Button variant="secondary" size="sm" onClick={() => loadPreset("text")}>Text</Button>
-                    <Button variant="secondary" size="sm" onClick={() => loadPreset("email")}>Email</Button>
-                    <Button variant="secondary" size="sm" onClick={() => loadPreset("social")}>Social</Button>
+                    <Button variant="secondary" size="sm" onClick={() => switchKindOnly("text")}>
+                      Text
+                    </Button>
+                    <Button variant="secondary" size="sm" onClick={() => switchKindOnly("email")}>
+                      Email
+                    </Button>
+                    <Button variant="secondary" size="sm" onClick={() => switchKindOnly("social")}>
+                      Social
+                    </Button>
                   </div>
                 </CardTitle>
               </CardHeader>
@@ -485,14 +517,7 @@ export default function Home() {
                 <Tabs
                   value={kind}
                   onValueChange={(v) => {
-                    setKind(v as any);
-                    setOverrideMismatch(false);
-                    setData(null);
-                    setError(null);
-                    if (v !== "email") {
-                      setEmailMode("personal");
-                      setSenderEmail("");
-                    }
+                    switchKindOnly(v as any);
                   }}
                 >
                   <TabsList className="bg-black/40 border border-white/10 text-white">
@@ -501,7 +526,6 @@ export default function Home() {
                     <TabsTrigger value="social">Social</TabsTrigger>
                   </TabsList>
 
-                  {/* EMAIL MODE TOGGLE */}
                   {kind === "email" ? (
                     <div className="mt-3 rounded-xl border border-white/10 bg-black/40 p-3">
                       <div className="flex items-center justify-between gap-3">
@@ -550,13 +574,32 @@ export default function Home() {
                     </div>
                   ) : null}
 
-                  {/* FORMAT MISMATCH BANNER */}
                   {mismatch ? (
-                    <div className="mt-3 rounded-xl border border-white/15 bg-white/5 p-3">
-                      <div className="text-sm font-semibold text-white">{mismatch.title}</div>
-                      <div className="mt-1 text-sm text-white/80">{mismatch.detail}</div>
+                    <motion.div
+                      className="mt-3 rounded-2xl border border-white/15 bg-white/5 p-4"
+                      style={{
+                        boxShadow: mismatchActive
+                          ? "0 0 0 1px rgba(255,255,255,0.12), 0 0 28px rgba(217,70,239,0.14)"
+                          : undefined,
+                      }}
+                      animate={
+                        mismatchActive
+                          ? { scale: [1, 1.02, 1], x: [0, -3, 3, -2, 2, 0] }
+                          : { scale: 1, x: 0 }
+                      }
+                      transition={
+                        mismatchActive ? { duration: 0.9, repeat: Infinity, ease: "easeInOut" } : { duration: 0.2 }
+                      }
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="text-base font-semibold text-white">{mismatch.title}</div>
+                          <div className="mt-1 text-sm text-white/85">{mismatch.detail}</div>
+                        </div>
+                        <Badge className="border border-white/15 bg-white/10 text-white">ACTION NEEDED</Badge>
+                      </div>
 
-                      <div className="mt-3 flex flex-wrap gap-2">
+                      <div className="mt-4 flex flex-wrap gap-2">
                         <Button
                           size="sm"
                           className="text-black bg-gradient-to-r from-fuchsia-300 via-cyan-200 to-amber-200 hover:opacity-90"
@@ -573,18 +616,23 @@ export default function Home() {
                           Analyze anyway
                         </Button>
                       </div>
-                    </div>
+
+                      <div className="mt-2 text-xs text-white/70">
+                        This step improves accuracy — the site can still analyze if you choose “Analyze anyway.”
+                      </div>
+                    </motion.div>
                   ) : null}
 
                   <TabsContent value={kind} className="mt-3">
                     <Textarea
                       value={text}
                       onChange={(e) => {
-                        setText(e.target.value);
+                        const v = e.target.value;
+                        setDrafts((d) => ({ ...d, [kind]: v }));
                         setOverrideMismatch(false);
                       }}
                       className="min-h-[320px] bg-black/40 border-white/10 text-white placeholder:text-white/60"
-                      placeholder="Paste the message here…"
+                      placeholder="Paste or type here… (no samples auto-fill)"
                     />
                   </TabsContent>
                 </Tabs>
@@ -599,7 +647,9 @@ export default function Home() {
                   </Button>
 
                   {mismatch && !overrideMismatch ? (
-                    <div className="text-sm text-white/75">Fix mismatch or click “Analyze anyway”.</div>
+                    <div className="text-sm text-white/80">
+                      Choose <span className="font-semibold">Switch</span> or <span className="font-semibold">Analyze anyway</span>.
+                    </div>
                   ) : null}
 
                   {error ? <div className="text-sm text-white">Error: {error}</div> : null}
@@ -636,11 +686,13 @@ export default function Home() {
                   </Button>
                 </div>
 
-                <div className="text-sm text-white/80">Demo buttons auto-run analysis so judging is smooth.</div>
+                <div className="text-sm text-white/80">
+                  Only the Demo buttons inject sample text. Your drafts are preserved per tab.
+                </div>
               </CardContent>
             </Card>
 
-            {/* RIGHT */}
+            {/* RIGHT (same as before) */}
             <Card className="bg-black/35 border-white/10 backdrop-blur text-white">
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
@@ -685,32 +737,50 @@ export default function Home() {
                       transition={{ duration: 0.25 }}
                       className="space-y-4"
                     >
-                      {/* ATTACK TYPES + TOOLTIP DEFINITIONS */}
                       {data.attack_types?.length ? (
                         <div className="rounded-xl border border-white/10 bg-black/40 p-4">
                           <div className="text-sm mb-2 text-white/80">Attack Type</div>
                           <div className="flex flex-wrap gap-2">
-                            {data.attack_types.slice(0, 6).map((t) => (
-                              <Tooltip key={t.tag}>
-                                <TooltipTrigger asChild>
-                                  <div className="cursor-help">
-                                    <Badge className="border border-white/15 bg-white/10 text-white">
-                                      {t.tag} · {t.confidence}%
-                                    </Badge>
-                                  </div>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <div className="font-semibold mb-1">{t.tag}</div>
-                                  <div className="text-white/90">{TERM_DEFS[t.tag] ?? "Security term definition."}</div>
-                                  <div className="mt-2 text-white/70">{t.rationale}</div>
-                                </TooltipContent>
-                              </Tooltip>
-                            ))}
+                            {data.attack_types.slice(0, 6).map((t) => {
+                              const key = t.tag;
+                              const def = TERM_DEFS[t.tag] ?? "Security term definition.";
+                              const isOpen = openTip === key;
+
+                              return (
+                                <Tooltip key={key} open={isOpen} onOpenChange={(o) => setOpenTip(o ? key : null)}>
+                                  <TooltipTrigger asChild>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setOpenTip((prev) => (prev === key ? null : key));
+                                      }}
+                                      className="cursor-pointer"
+                                      title="Click for meaning"
+                                    >
+                                      <Badge className="border border-white/15 bg-white/10 text-white hover:bg-white/15 transition">
+                                        {t.tag} · {t.confidence}%
+                                      </Badge>
+                                    </button>
+                                  </TooltipTrigger>
+                                  <TooltipContent
+                                    onPointerDown={(e) => e.stopPropagation()}
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <div className="font-semibold mb-1">{t.tag}</div>
+                                    <div className="text-white/90">{def}</div>
+                                    <div className="mt-2 text-white/70">{t.rationale}</div>
+                                    <div className="mt-2 text-[11px] text-white/60">
+                                      Tip: press Esc or click outside to close
+                                    </div>
+                                  </TooltipContent>
+                                </Tooltip>
+                              );
+                            })}
                           </div>
                         </div>
                       ) : null}
 
-                      {/* WORK EMAIL: SENDER CHECK BOX */}
                       {kind === "email" && emailMode === "work" && data.sender_analysis ? (
                         <div className="rounded-xl border border-white/10 bg-black/40 p-4">
                           <div className="text-sm mb-2 text-white/80">Work email legitimacy checks</div>
@@ -805,7 +875,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* HISTORY PANEL (unchanged style) */}
+        {/* HISTORY PANEL (unchanged behavior) */}
         <AnimatePresence>
           {historyOpen ? (
             <motion.div className="fixed inset-0 z-50" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -848,11 +918,12 @@ export default function Home() {
                         key={h.id}
                         onClick={() => {
                           setKind(h.kind);
-                          setText(h.text);
+                          setDrafts((d) => ({ ...d, [h.kind]: h.text }));
                           setData(null);
                           setError(null);
                           setHistoryOpen(false);
                           setOverrideMismatch(false);
+                          setOpenTip(null);
                           if (h.kind !== "email") {
                             setEmailMode("personal");
                             setSenderEmail("");
