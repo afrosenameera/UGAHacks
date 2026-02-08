@@ -1,36 +1,25 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Inspiration
+This project came from seeing how often people receive suspicious messages and aren’t sure whether to trust them or not. We wanted a tool that helps users pause, think, and see through manipulation before reacting.
 
-## Getting Started
+## What it does
+Hex-or-Hoax analyzes pasted messages, emails, or social posts to identify scam tactics and red flags. Instead of just giving a label, it explains why something is risky and what to watch out for.
 
-First, run the development server:
+## How we built it
+We built the project using a modern web stack with an AI-powered analysis engine behind a simple, intuitive interface and a modern web stack with an AI-powered analysis engine behind a simple, intuitive interface. The system uses a lightweight Retrieval-Augmented Generation (RAG) approach to ground AI explanations with known scam patterns and trusted references, making the results more specific and reliable, which power the Related News section and help ground the AI’s explanations in real-world examples.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Challenges we ran into
+One major challenge was getting the AI to give detailed, helpful explanations built with emotional intelligence instead of vague responses. We also spent a lot of time refining the UI so the design supported clarity rather than overwhelming users.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Accomplishments that we're proud of
+We’re proud of creating a tool that feels approachable while still tackling a serious problem. The project successfully combines technical functionality with thoughtful design and real-world usefulness.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## What we learned
+We learned how powerful social engineering techniques are and how small wording choices can influence behavior. The project also helped us improve our skills in AI integration, frontend development, and user-centered design.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## What's next for hex-or-hoax
+We plan to expand support for more content types like links and long-form posts. We also want to improve accuracy and personalization, so users get even clearer and more actionable insights.
 
 ## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Check out our [https://uga-hacks.vercel.app/](https://uga-hacks.vercel.app/) or more details.
