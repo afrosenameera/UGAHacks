@@ -1,0 +1,116 @@
+[
+    {
+      "id": "otp_theft",
+      "tags": ["otp", "verification code", "2fa", "one-time code", "mfa", "code we sent"],
+      "title": "OTP / MFA Code Theft",
+      "risk_boost": 30,
+      "min_risk": 85,
+      "why_risky": [
+        "Scammers use OTP/MFA codes to take over accounts.",
+        "Legitimate companies will not ask you to share a one-time code."
+      ],
+      "what_to_do": [
+        "Do not share any code.",
+        "If you already shared a code, reset your password immediately and check login activity.",
+        "Contact support via the official app/website."
+      ],
+      "safe_reply_template": "I can’t share verification codes. If this is real, I’ll verify through the official app or website."
+    },
+    {
+      "id": "bank_lockout_phish",
+      "tags": ["bank", "locked", "account suspended", "verify immediately", "security alert", "unusual activity", "link", "login"],
+      "title": "Bank Lockout / Account Suspension Phishing",
+      "risk_boost": 22,
+      "min_risk": 75,
+      "why_risky": [
+        "Fake security alerts try to panic you into clicking a link.",
+        "Attackers use lookalike login pages to steal credentials."
+      ],
+      "what_to_do": [
+        "Do not click the link.",
+        "Open your bank app directly and check notifications.",
+        "Call the bank using the number on the back of your card."
+      ],
+      "safe_reply_template": "I’m not using message links. I’ll check through the official bank app/phone number."
+    },
+    {
+      "id": "ceo_gift_cards",
+      "tags": ["gift card", "ceo", "urgent", "confidential", "wire", "payroll", "finance", "buy cards", "send codes"],
+      "title": "CEO Fraud / Gift Card Scam (BEC)",
+      "risk_boost": 26,
+      "min_risk": 80,
+      "why_risky": [
+        "Impersonates leadership to pressure employees into payments.",
+        "Urgency + secrecy is a classic BEC pattern."
+      ],
+      "what_to_do": [
+        "Verify using a trusted internal method (call or directory).",
+        "Do not buy gift cards or send codes.",
+        "Report to IT/security immediately."
+      ],
+      "safe_reply_template": "I can’t process payments or gift cards over email. I’ll verify this request through official company channels."
+    },
+    {
+      "id": "viral_engagement_bait",
+      "tags": [
+        "link in bio",
+        "share before it's deleted",
+        "share before it’s deleted",
+        "they don't want you to know",
+        "they don’t want you to know",
+        "repost",
+        "viral",
+        "double your money",
+        "miracle trick",
+        "before it's removed",
+        "before it’s removed"
+      ],
+      "title": "Viral Engagement Bait / Get-Rich-Quick",
+      "risk_boost": 24,
+      "min_risk": 70,
+      "why_risky": [
+        "Uses virality pressure and vague claims to manipulate sharing.",
+        "‘Double your money overnight’ is a common fraud trope."
+      ],
+      "what_to_do": [
+        "Do not reshare.",
+        "Check credible sources before believing or sharing.",
+        "Avoid ‘link in bio’ offers—many lead to scams or malware."
+      ],
+      "safe_reply_template": "I’m not sharing or clicking links from viral posts. I’ll verify with reliable sources first."
+    },
+    {
+      "id": "credential_phish",
+      "tags": ["password", "sign in", "login", "reset", "verify your account", "confirm your identity"],
+      "title": "Credential Harvesting (Phishing Login)",
+      "risk_boost": 20,
+      "min_risk": 70,
+      "why_risky": [
+        "Phishing pages imitate real logins to steal passwords.",
+        "Attackers often pair fear/urgency with fake verification prompts."
+      ],
+      "what_to_do": [
+        "Do not click message links.",
+        "Navigate to the official site/app manually.",
+        "Enable MFA and change passwords if you entered credentials."
+      ],
+      "safe_reply_template": "I won’t use links from messages. I’ll access the official site/app directly."
+    },
+    {
+      "id": "format_not_email",
+      "tags": ["email format check", "subject:", "from:", "to:"],
+      "title": "Format mismatch: not an email",
+      "risk_boost": 12,
+      "min_risk": 60,
+      "why_risky": [
+        "If content doesn’t match the chosen format, users may misinterpret risk.",
+        "Viral/social content pasted into Email mode often indicates spam or manipulation."
+      ],
+      "what_to_do": [
+        "Switch to the correct tab (Text/Social).",
+        "Re-run analysis for accurate signals."
+      ],
+      "safe_reply_template": "This doesn’t look like a normal email. I’ll verify context and use the right channel."
+    }
+  ]
+  
